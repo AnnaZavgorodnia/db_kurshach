@@ -29,7 +29,8 @@ class MoyoSpider(Spider):
             'cpu_frequency': parse_cpu_freq(specs.xpath('./div[5]/text()').get()),
             'ram': parse_ram(specs.xpath('./div[6]/text()').get()),
             'memory': parse_memory(specs.xpath('./div[10]/text()').get()),
-            'weight': parse_weight(specs.xpath('./div[last()]/text()').get())}
+            'weight': parse_weight(specs.xpath('./div[last()]/text()').get()),
+            'price': parse_price(item.xpath('.//span[@class="product-tile_price-value"]/text()').get())}
 
 
 def parse_cpu_freq(freq):
@@ -58,11 +59,14 @@ def parse_memory(memory):
 
 
 def parse_weight(weight):
-    print(weight)
     try:
         return float(weight.replace(',', '.'))
     except ValueError:
         return 2.5
+
+
+def parse_price(price):
+    return int(remove_non_numeric(price))
 
 
 def remove_non_numeric(line):
