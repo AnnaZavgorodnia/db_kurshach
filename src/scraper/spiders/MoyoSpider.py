@@ -1,4 +1,5 @@
 import re
+from urllib.parse import urljoin
 
 from scrapy import Selector
 from scrapy.spiders import Spider, Request
@@ -8,20 +9,26 @@ class MoyoSpider(Spider):
     name = 'moyo'
     start_urls = [
         'https://www.moyo.ua/comp-and-periphery/notebooks/?perPage=96?page=1']
+    last_page_num = None
 
     def parse(self, response):
         items = Selector(response=response) \
             .xpath('//div[@class="product-tile_inner_wrapper"]')
-        if not items:
-            return
 
         for item in items:
-            yield self.parse_item(item)
-        yield Request(increase_page_number(response.url),
-                      callback=self.parse)
+            yield self.parse_item(item, response.url)
+
+        if not self.last_page_num:
+            last_nav_el = Selector(response).xpath('//a[@class="new-pagination-link"][last()]/text()').get()
+            self.last_page_num = int(last_nav_el)
+
+        next_page_url, next_page_num = increase_page_number(response.url)
+        if next_page_num <= self.last_page_num:
+            yield Request(next_page_url,
+                          callback=self.parse)
 
     @staticmethod
-    def parse_item(item):
+    def parse_item(item, main_url):
         specs = item.xpath('.//div[@class="specifications_content"]')
 
         return {
@@ -30,7 +37,9 @@ class MoyoSpider(Spider):
             'ram': parse_ram(specs.xpath('./div[6]/text()').get()),
             'memory': parse_memory(specs.xpath('./div[10]/text()').get()),
             'weight': parse_weight(specs.xpath('./div[last()]/text()').get()),
-            'price': parse_price(item.xpath('.//span[@class="product-tile_price-value"]/text()').get())}
+            'price': parse_price(item.xpath('.//span[@class="product-tile_price-value"]/text()').get()),
+            'origin_url': urljoin(main_url, item.xpath('.//a[@class="gtm-link-product"]/@href').get())
+        }
 
 
 def parse_cpu_freq(freq):
@@ -75,4 +84,5 @@ def remove_non_numeric(line):
 
 def increase_page_number(url):
     base, page = url.split('page=')
-    return f'{base}page={int(page) + 1}'
+    new_page_number = int(page) + 1
+    return f'{base}page={new_page_number}', new_page_number

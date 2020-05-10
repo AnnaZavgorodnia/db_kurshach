@@ -38,7 +38,8 @@ class FoxtrotSpider(Spider):
             'ram': parse_ram(ram),
             'memory': parse_memory(hdd_mem) + parse_memory(ssd_mem),
             'weight': parse_weight(weight),
-            'price': parse_price(price)
+            'price': parse_price(price),
+            'origin_url': response.url
         }
 
 
