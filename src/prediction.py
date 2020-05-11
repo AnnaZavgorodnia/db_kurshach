@@ -42,6 +42,6 @@ def most_profitable_laptop():
     new_df = df.copy()
     predicted_prices = np.array(model.predict(x), dtype=int)
     new_df.insert(len(new_df.columns), 'predicted price', predicted_prices)
-    new_df.insert(len(new_df.columns), 'profit', new_df['price'] / new_df['predicted price'])
+    new_df.insert(len(new_df.columns), 'profit', new_df['predicted price'] / new_df['price'])
 
-    return new_df.sort_values(by='profit', ascending=False)
+    return new_df.sort_values(by='profit', ascending=False)[['name', 'price', 'predicted price', 'profit']]
