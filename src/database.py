@@ -15,4 +15,3 @@ def get_collection():
         db.create_collection(collection_name)
 
     return db[collection_name]
-
